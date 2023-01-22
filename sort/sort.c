@@ -158,26 +158,66 @@ void HeapSort(int* arr, int n)
 	}
 }
 
-void SelectSortTest()
+//冒泡排序 时间复杂度：O(N^2)
+void BubbleSort(int* arr, int n)
+{
+	int i, j;
+	for (i = 0; i < n; i++)
+	{
+		int Ischanged = 0;
+		for (j = 1; j < n - i; j++)
+		{
+			if (arr[j - 1] > arr[j])
+			{
+				Swap(&arr[j - 1], &arr[j]);
+				Ischanged = 1;
+			}
+		}
+		if (!Ischanged)
+		{
+			break;
+		}
+	}
+}
+
+//快排 时间复杂度：O( )
+void QuickSort(int* arr, int left,int right)
+{
+	//待排序数组元素个数不超过1个时无需再排序了
+	if (left>right)
+		return;
+
+	int begin=left, end=right, key,hole;
+	key = arr[begin];
+	hole = begin;
+	//1.将数组分为三部分：左边的数都小于key--key--右边的数都大于key
+	while (begin < end)
+	{
+		while (begin<end && arr[end] >= key)
+		{
+			end--;
+		}
+		arr[hole] = arr[end];
+		hole = end;
+		while (begin<end && arr[begin] <= key)
+		{
+			begin++;
+		}
+		arr[hole] = arr[begin];
+		hole = begin;
+	}
+	arr[hole] = key;
+
+	//2.此时key在数组正确的位置只需使左右两部分有序即可-->分治
+	QuickSort(arr, left, hole - 1);
+	QuickSort(arr, hole + 1, right);
+}
+
+void QuickSortTest()
 {
 	int arr1[] = { 100,15,19,18,28,34,65,49,10,-1 };
-	SelectSort(arr1, sizeof(arr1) / sizeof(arr1[0]));
-	PrintArry(arr1, sizeof(arr1) / sizeof(arr1[0]));
-}
 
-void HeapTest()
-{
-	int arr1[] = { 27,15,19,18,28,34,65,49,25,37 };
-
-	HeapSort(arr1, sizeof(arr1) / sizeof(arr1[0]));
-	PrintArry(arr1, sizeof(arr1) / sizeof(arr1[0]));
-}
-
-void AdjustDownTest()
-{
-	int arr1[] = { 27,15,19,18,28,34,65,49,25,37 };
-	
-	AdjustDown(arr1, sizeof(arr1)/sizeof(arr1[0]), 0);
+	QuickSort(arr1, 0, sizeof(arr1) / sizeof(arr1[0])-1);
 	PrintArry(arr1, sizeof(arr1) / sizeof(arr1[0]));
 }
 
@@ -187,14 +227,14 @@ void TimeTest()
 	max = 10000000;
 	int* arr1 =(int*)malloc(max * sizeof(int));
 	int* arr2 = (int*)malloc(max * sizeof(int));
-	//int* arr3 = (int*)malloc(max * sizeof(int));
+	int* arr3 = (int*)malloc(max * sizeof(int));
 	//int* arr4 = (int*)malloc(max * sizeof(int));
 	//int* arr5 = (int*)malloc(max * sizeof(int));
 	for (i = 0;i < max; i++)
 	{
 		arr1[i] = rand();
 		arr2[i] = arr1[i];
-		//arr3[i] = arr1[i];
+		arr3[i] = arr1[i];
 		//arr4[i] = arr1[i];
 		//arr5[i] = arr1[i];
 	}
@@ -202,32 +242,36 @@ void TimeTest()
 	clock_t begin,finish;
 
 	begin = clock();
-	ShellSort(arr2, max);
-	finish = clock();
-	printf("ShellSort: %d\n", finish - begin);
-
-	begin = clock();
 	HeapSort(arr1, max);
 	finish = clock();
 	printf("HeapSort: %d\n", finish - begin);
 
-	/*begin = clock();
-	InsertSort(arr1, max);
+	begin = clock();
+	QuickSort(arr3, 0, max - 1);
 	finish = clock();
-	printf("InsertSort: %d\n", finish - begin);*/
+	printf("QuickSort: %d\n", finish - begin);
 
+	begin = clock();
+	ShellSort(arr2, max);
+	finish = clock();
+	printf("ShellSort: %d\n", finish - begin);
+
+	
 	free(arr1);
 	free(arr2);
-	/*free(arr3);
-	free(arr4);
-	free(arr5);*/
+	free(arr3);
+	//free(arr4);
+	//free(arr5);
 }
 
 int main()
 {
+	TimeTest();
+
 	//AdjustDownTest();
-	//TimeTest();
 	//HeapTest();
-	SelectSortTest();
+	//SelectSortTest();
+	//BubbleSortTest();
+	//QuickSortTest();
 	return 0;
 }
