@@ -22,6 +22,21 @@ void PrintArry(int* arr,int n)
 	printf("\n");
 }
 
+//检测是否为升序
+int IsAscenOrder(int* arr, int n)
+{
+	for (int i = 0; i < n-1; i++)
+	{
+		if (arr[i] > arr[i + 1])
+		{
+			printf("开始下标为%d", i);
+			return 0;
+		}
+	}
+	printf("排序无误\n");
+	return 1;
+}
+
 //直接插入排序 时间复杂度 O(n^2)
 void InsertSort(int* arr,int n)
 {
@@ -180,55 +195,249 @@ void BubbleSort(int* arr, int n)
 	}
 }
 
-//快排 时间复杂度：O( )
+//三数找中
+int MidIndex(int* arr, int left, int right)
+{
+	int mid = (left + right) >>1;
+	if (arr[left] < arr[mid])
+	{
+		if (arr[mid] < arr[right])
+			return mid;
+		else if (arr[left] > arr[right])
+			return left;
+		else 
+			return right;
+	}
+	else
+	{
+		if (arr[left] < arr[right])
+			return left;
+		else if (arr[right] > arr[mid])
+			return right;
+		else return mid;
+	}
+}
+
+//快排->挖坑法：
+int QuickSortPart1(int* arr, int left, int right)
+{
+	int begin = left, end = right, key, pivot;
+
+	//优化1.三数找中 
+	//当普通快排 排有序数列(升序、降序)时 时间复杂度为：O(N^2)
+	//因此采用三数找中解决 key 为最值时 时间复杂度太高
+	int index = MidIndex(arr, left, right);
+	Swap(&arr[begin], &arr[index]);
+
+	key = arr[begin];
+	pivot = begin;
+
+	while (begin < end)
+	{
+		while (begin < end && arr[end] >= key)
+		{
+			end--;
+		}
+		arr[pivot] = arr[end];
+		pivot = end;
+		while (begin < end && arr[begin] <= key)
+		{
+			begin++;
+		}
+		arr[pivot] = arr[begin];
+		pivot = begin;
+	}
+	arr[pivot] = key;
+	return pivot;
+}
+
+//快排->左右指针法：
+int QuickSortPart2(int* arr, int left, int right)
+{
+	int begin = left, end = right, keyi;
+
+	//优化1.三数找中 
+	//当普通快排 排有序数列(升序、降序)时 时间复杂度为：O(N^2)
+	//因此采用三数找中解决 key 为最值时 时间复杂度太高
+	int index = MidIndex(arr, left, right);
+	Swap(&arr[begin], &arr[index]);
+
+	keyi = begin;
+	while (begin < end)
+	{
+		while (begin<end && arr[end] >= arr[keyi])
+			end--;
+		while (begin < end && arr[begin] <= arr[keyi])
+			begin++;
+		Swap(&arr[begin], &arr[end]);
+	}
+	Swap(&arr[keyi], &arr[begin]);
+	return begin;
+}
+
+//快排->前后指针法：
+int QuickSortPart3(int* arr, int left, int right)
+{
+	int index = MidIndex(arr, left, right);
+	int cur = left, prev = left + 1,pivot=left;
+	Swap(&arr[cur], &arr[index]);
+
+	while (prev<=right)
+	{
+		if (arr[pivot] >= arr[prev] && ++cur != prev )
+			Swap(&arr[cur],&arr[prev]);
+		prev++;
+	}
+	Swap(&arr[pivot], &arr[cur]);
+	return cur;
+}
+
+//快排 时间复杂度：O(N*logN)
 void QuickSort(int* arr, int left,int right)
 {
 	//待排序数组元素个数不超过1个时无需再排序了
 	if (left>right)
 		return;
 
-	int begin=left, end=right, key,hole;
-	key = arr[begin];
-	hole = begin;
 	//1.将数组分为三部分：左边的数都小于key--key--右边的数都大于key
-	while (begin < end)
-	{
-		while (begin<end && arr[end] >= key)
-		{
-			end--;
-		}
-		arr[hole] = arr[end];
-		hole = end;
-		while (begin<end && arr[begin] <= key)
-		{
-			begin++;
-		}
-		arr[hole] = arr[begin];
-		hole = begin;
-	}
-	arr[hole] = key;
+	int index=QuickSortPart3(arr,left,right);
 
 	//2.此时key在数组正确的位置只需使左右两部分有序即可-->分治
-	QuickSort(arr, left, hole - 1);
-	QuickSort(arr, hole + 1, right);
+	
+	// 优化2.小规模优化
+	//小规模优化-->当数组元素很多时 使用小规模优化 可减少递归开销
+	if (index - left > 10)
+		QuickSort(arr, left, index - 1);
+	else 
+		InsertSort(arr+left,index-left);
+	if (right - index > 10)
+		QuickSort(arr, index + 1, right);
+	else
+		InsertSort(arr+index+1, right - index);
+}
+
+void _MergeSort(int*arr,int left,int right,int* tmp)
+{
+	if (left >= right)
+		return;
+	int mid = (left + right) >> 1;
+	_MergeSort(arr, left, mid, tmp);
+	_MergeSort(arr, mid + 1, right, tmp);
+
+	int begin1 = left, end1 = mid;
+	int begin2 = mid + 1, end2 = right;
+	int index = left;
+	while (begin1 <= end1 && begin2 <= end2)
+	{
+		if (arr[begin1] < arr[begin2])
+			tmp[index++] = arr[begin1++];
+		else
+			tmp[index++] = arr[begin2++];
+	}
+	while (begin1 <= end1)
+	{
+		tmp[index++] = arr[begin1++];
+	}
+	while (begin2 <= end2)
+	{
+		tmp[index++] = arr[begin2++];
+	}
+	for (int i = left; i <= right; i++)
+	{
+		arr[i] = tmp[i];
+	}
+}
+
+void MergeSort(int* arr, int n)
+{
+	int* tmp = (int*)malloc(sizeof(int) * n);
+	_MergeSort(arr, 0, n - 1, tmp);
+	free(tmp);
+	
+}
+
+void MergeSortTest()
+{
+	int n = 20;
+	int* arr = (int*)malloc(n * sizeof(int));
+	int* arr1 = (int*)malloc(n * sizeof(int));
+	int* arr2 = (int*)malloc(n * sizeof(int));
+	int* arr3 = (int*)malloc(n * sizeof(int));
+	for (int i = 0; i < n; i++)
+	{
+		arr[i] = rand() % 1000;
+		arr1[i] = rand() % 1000;
+		arr2[i] = rand() % 1000;
+		arr3[i] = rand() % 1000;
+	}
+
+	MergeSort(arr, n);
+	PrintArry(arr, n);
+	IsAscenOrder(arr, n);
+
+	MergeSort(arr1, n);
+	PrintArry(arr1, n);
+	IsAscenOrder(arr1, n);
+
+	MergeSort(arr2, n);
+	PrintArry(arr2, n);
+	IsAscenOrder(arr2, n);
+
+	MergeSort(arr3, n);
+	PrintArry(arr3, n);
+	IsAscenOrder(arr3, n);
+
+	free(arr);
+	free(arr1);
+	free(arr2);
+	free(arr3);
 }
 
 void QuickSortTest()
 {
-	int arr1[] = { 100,15,19,18,28,34,65,49,10,-1 };
+	int n = 20;
+	int* arr = (int*)malloc(n * sizeof(int));
+	int* arr1 = (int*)malloc(n * sizeof(int));
+	int* arr2 = (int*)malloc(n * sizeof(int));
+	int* arr3 = (int*)malloc(n * sizeof(int));
+	for (int i = 0; i < n; i++)
+	{
+		arr[i] = rand() % 1000;
+		arr1[i] = rand() % 1000;
+		arr2[i] = rand() % 1000;
+		arr3[i] = rand() % 1000;
+	}
 
-	QuickSort(arr1, 0, sizeof(arr1) / sizeof(arr1[0])-1);
-	PrintArry(arr1, sizeof(arr1) / sizeof(arr1[0]));
+	QuickSort(arr, 0,n-1);
+	PrintArry(arr, n);
+	IsAscenOrder(arr, n);
+
+	QuickSort(arr1, 0, n - 1);
+	PrintArry(arr1, n);
+	IsAscenOrder(arr1, n);
+
+	QuickSort(arr2, 0, n - 1);
+	PrintArry(arr2, n);
+	IsAscenOrder(arr2, n);
+
+	QuickSort(arr3, 0, n - 1);
+	PrintArry(arr3, n);
+	IsAscenOrder(arr3, n);
+
+	free(arr);
+	free(arr1);
+	free(arr2);
+	free(arr3);
 }
 
 void TimeTest()
 {
 	unsigned long i,max;
-	max = 10000000;
+	max = 1000000;
 	int* arr1 =(int*)malloc(max * sizeof(int));
 	int* arr2 = (int*)malloc(max * sizeof(int));
 	int* arr3 = (int*)malloc(max * sizeof(int));
-	//int* arr4 = (int*)malloc(max * sizeof(int));
+	int* arr4 = (int*)malloc(max * sizeof(int));
 	//int* arr5 = (int*)malloc(max * sizeof(int));
 	for (i = 0;i < max; i++)
 	{
@@ -256,6 +465,11 @@ void TimeTest()
 	finish = clock();
 	printf("ShellSort: %d\n", finish - begin);
 
+	//begin = clock();
+	//InsertSort(arr4, max);
+	//finish = clock();
+	//printf("InsertSort: %d\n", finish - begin);
+
 	
 	free(arr1);
 	free(arr2);
@@ -266,12 +480,11 @@ void TimeTest()
 
 int main()
 {
-	TimeTest();
+	srand((unsigned int)time(NULL));
+	//TimeTest();
 
-	//AdjustDownTest();
-	//HeapTest();
-	//SelectSortTest();
-	//BubbleSortTest();
-	//QuickSortTest();
+	//ShellSortTest();
+	QuickSortTest();
+	//MergeSortTest();
 	return 0;
 }
