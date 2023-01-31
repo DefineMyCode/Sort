@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "Stack.h"
 
 void Swap(int* p1, int* p2)
 {
@@ -10,7 +11,7 @@ void Swap(int* p1, int* p2)
 }
 
 //打印数组
-void PrintArry(int* arr,int n)
+void PrintArray(int* arr,int n)
 {
 	int i;
 	for (i = 0; i < n; i++)
@@ -316,6 +317,43 @@ void QuickSort(int* arr, int left,int right)
 		InsertSort(arr+index+1, right - index);
 }
 
+//快排非递归 用数据结构中的栈来模拟函数的栈帧
+void QuickSortNonR(int *arr,int n)
+{
+	ST st;
+	StackInit(&st);
+	int left = 0, right = n - 1;
+	StackPush(&st,right);
+	StackPush(&st,left);
+
+	while (!StackEmpty(&st))
+	{
+		left = StackTop(&st);
+		StackPop(&st);
+		right = StackTop(&st);
+		StackPop(&st);
+		
+		int pivot = QuickSortPart1(arr, left, right);
+		//left      pivot         right
+		//只有区间大于1(为1或0时已经有序了)时才入栈
+		if (left < pivot - 1)
+		{
+			//将左区间入栈
+			StackPush(&st, pivot - 1);
+			StackPush(&st, left);
+		}
+		
+		if (right > pivot + 1)
+		{
+			//将右区间入栈
+			StackPush(&st, right);
+			StackPush(&st, pivot + 1);
+		}
+	}
+	
+	StackDestroy(&st);
+}
+
 void _MergeSort(int*arr,int left,int right,int* tmp)
 {
 	if (left >= right)
@@ -348,6 +386,7 @@ void _MergeSort(int*arr,int left,int right,int* tmp)
 	}
 }
 
+//归并排序 时间复杂度：O(N*logN)
 void MergeSort(int* arr, int n)
 {
 	int* tmp = (int*)malloc(sizeof(int) * n);
@@ -372,19 +411,19 @@ void MergeSortTest()
 	}
 
 	MergeSort(arr, n);
-	PrintArry(arr, n);
+	PrintArray(arr, n);
 	IsAscenOrder(arr, n);
 
 	MergeSort(arr1, n);
-	PrintArry(arr1, n);
+	PrintArray(arr1, n);
 	IsAscenOrder(arr1, n);
 
 	MergeSort(arr2, n);
-	PrintArry(arr2, n);
+	PrintArray(arr2, n);
 	IsAscenOrder(arr2, n);
 
 	MergeSort(arr3, n);
-	PrintArry(arr3, n);
+	PrintArray(arr3, n);
 	IsAscenOrder(arr3, n);
 
 	free(arr);
@@ -393,7 +432,7 @@ void MergeSortTest()
 	free(arr3);
 }
 
-void QuickSortTest()
+void QuickSortNonRTest()
 {
 	int n = 20;
 	int* arr = (int*)malloc(n * sizeof(int));
@@ -408,26 +447,29 @@ void QuickSortTest()
 		arr3[i] = rand() % 1000;
 	}
 
-	QuickSort(arr, 0,n-1);
-	PrintArry(arr, n);
+	QuickSortNonR(arr, n);
+	PrintArray(arr, n);
 	IsAscenOrder(arr, n);
 
-	QuickSort(arr1, 0, n - 1);
-	PrintArry(arr1, n);
+	QuickSortNonR(arr1, n);
+	PrintArray(arr1, n);
 	IsAscenOrder(arr1, n);
 
-	QuickSort(arr2, 0, n - 1);
-	PrintArry(arr2, n);
+	QuickSortNonR(arr2, n);
+	PrintArray(arr2, n);
 	IsAscenOrder(arr2, n);
 
-	QuickSort(arr3, 0, n - 1);
-	PrintArry(arr3, n);
+	QuickSortNonR(arr3, n);
+	PrintArray(arr3, n);
 	IsAscenOrder(arr3, n);
 
 	free(arr);
 	free(arr1);
 	free(arr2);
 	free(arr3);
+	//int a[] = { 2,5,4,1,3,7,6,-1 };
+	//QuickSortNonR(a, sizeof(a) / sizeof(a[0]));
+	//PrintArray(a, sizeof(a) / sizeof(a[0]));
 }
 
 void TimeTest()
@@ -438,14 +480,14 @@ void TimeTest()
 	int* arr2 = (int*)malloc(max * sizeof(int));
 	int* arr3 = (int*)malloc(max * sizeof(int));
 	int* arr4 = (int*)malloc(max * sizeof(int));
-	//int* arr5 = (int*)malloc(max * sizeof(int));
+	int* arr5 = (int*)malloc(max * sizeof(int));
 	for (i = 0;i < max; i++)
 	{
 		arr1[i] = rand();
 		arr2[i] = arr1[i];
 		arr3[i] = arr1[i];
-		//arr4[i] = arr1[i];
-		//arr5[i] = arr1[i];
+		arr4[i] = arr1[i];
+		arr5[i] = arr1[i];
 	}
 
 	clock_t begin,finish;
@@ -461,21 +503,26 @@ void TimeTest()
 	printf("QuickSort: %d\n", finish - begin);
 
 	begin = clock();
+	QuickSortNonR(arr5, max);
+	finish = clock();
+	printf("QuickSortNonR: %d\n", finish - begin);
+
+	begin = clock();
 	ShellSort(arr2, max);
 	finish = clock();
 	printf("ShellSort: %d\n", finish - begin);
 
-	//begin = clock();
-	//InsertSort(arr4, max);
-	//finish = clock();
-	//printf("InsertSort: %d\n", finish - begin);
+	begin = clock();
+	MergeSort(arr4, max);
+	finish = clock();
+	printf("MergeSort: %d\n", finish - begin);
 
 	
 	free(arr1);
 	free(arr2);
 	free(arr3);
-	//free(arr4);
-	//free(arr5);
+	free(arr4);
+	free(arr5);
 }
 
 int main()
@@ -484,7 +531,7 @@ int main()
 	//TimeTest();
 
 	//ShellSortTest();
-	QuickSortTest();
+	QuickSortNonRTest();
 	//MergeSortTest();
 	return 0;
 }
